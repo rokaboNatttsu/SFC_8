@@ -73,7 +73,7 @@
 | 期末純資産       | $NW_w$        | $NW_i$                     | $NW_f$                    | $NW_b$                     | $NW_g$                    |
 
 ## その他注意すべき制約となる恒等式
-- $e_i+e_b=0$
+- $e_i+e_b=e$
 - $\Delta e_i+\Delta e_b=0$
 
 ## モデルの式一覧
@@ -113,7 +113,7 @@
 - $\Delta L_f=\max\{-L_f, \mu_2(W+T_v+T_c+r_LL_{f-1}-\mu_3M_{f-1}) \}$
 - $L_f=L_{f-1}+\Delta L_f$
 - $\Delta M_f=NL_f+\Delta L_f$
-- $M_f=M_{-1}+\Delta M_f$
+- $M_f=M_{f-1}+\Delta M_f$
 - $M=M_w+M_i+M_f$
 - $H=\nu M$
 - $\Delta H=H-H_{-1}$
