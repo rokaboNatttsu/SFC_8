@@ -14,167 +14,155 @@ using Plots
 μ1, μ2, μ3 = 20.0, 0.1, 0.1  # 企業借入パラメータ
 ν = 0.1  # 現金比率
 λ01, λ11, λ12, λ22, λ14 = 0.1, 0.5, 0.3, 0.2, 0.1  # ポートフォリオパラメータ
-r_B, r_L, r_E, π, u_T = 0.03, 0.05, 0.06, 0.02, 0.8  # 金利とインフレ
+rB, rL, rE, π, uT = 0.03, 0.05, 0.06, 0.02, 0.8  # 金利とインフレ
 
 # シミュレーションパラメータ
 T = 100  # 期間数
 
 # カテゴリごとにグループ化された配列の初期化
-T_iw, T_ii, T_i, T_a, T_v, T_c = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
+Tiw, Tii, Ti, Ta, Tv, Tc = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
 G = zeros(T)
-C_w, C_i, C = zeros(T), zeros(T), zeros(T)
+Cw, Ci, C = zeros(T), zeros(T), zeros(T)
 I = zeros(T)
 u = zeros(T)
 K = zeros(T)
 W = zeros(T)
-P, P_i, P_b, P_f = zeros(T), zeros(T), zeros(T), zeros(T)
+P, Pi, Pb, Pf = zeros(T), zeros(T), zeros(T), zeros(T)
 S = zeros(T)
-NL_w, NL_i, NL_f, NL_b, NL_g = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
-p_B = zeros(T)
-L_w, ΔL_w, ΔM_w, M_w = zeros(T), zeros(T), zeros(T), zeros(T)
-M_i, ΔM_i = zeros(T), zeros(T)
-ΔL_f, L_f, ΔM_f, M_f = zeros(T), zeros(T), zeros(T), zeros(T)
-M = zeros(T)
+NLw, NLi, NLf, NLb, NLg = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
+pB, pE = zeros(T), zeros(T)
+Lw, Lf, L, ΔLw, ΔLf, ΔL = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
+Mi, Mw, Mf, M, ΔMi, ΔMw, ΔMf, ΔM = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
 H, ΔH = zeros(T), zeros(T)
 Δb, b, B = zeros(T), zeros(T), zeros(T)
-B_i_e, B_b_e, B_i, B_b, b_i, b_b, Δb_i, Δb_b = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
-E_i_T, E_b_T, p_E, Δe_i, Δe_b, e_i, e_b, E_i, E_b = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
-r_LL_w, r_LL_f, r_LL = zeros(T), zeros(T), zeros(T)
-r_BB_i, r_BB_b, r_BB = zeros(T), zeros(T), zeros(T)
+Bie, Bbe, Bi, Bb, bi, bb, Δbi, Δbb = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
+EiT, EbT, Δei, Δeb, ei, eb, Ei, Eb = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
 
 # 初期値（期間1）
 K[1] = 100.0
 G[1] = 20.0
-C_w[1], C_i[1] = 15.0, 10.0; C[1] = C_w[1] + C_i[1]
+Cw[1], Ci[1] = 15.0, 10.0; C[1] = Cw[1] + Ci[1]
 I[1] = 10.0
-u[1] = (C[1] + G[1] + I[1]) / (γ1 * K[1])
+u[1] = (C[1] + G[1] + I[1]) / (γ1*K[1])
 W[1] = 25.0
-L_w[1], L_f[1] = 5.0, 5.0
-M_w[1], M_i[1], M_f[1] = 10.0, 5.0, 5.0; M[1] = M_w[1] + M_i[1] + M_f[1]
-E_i[1], E_b[1] = 20.0, 10.0; e_i[1], e_b[1] = 20.0, 10.0
-B_i[1], B_b[1] = 30.0, 20.0; b_i[1], b_b[1] = 30.0, 20.0; b[1] = b_i[1] + b_b[1]; B[1] = B_i[1] + B_b[1]
-H[1] = ν * M[1]; ΔH[1] = 0.0
-p_B[1] = (1 - r_B) / (1 - r_B^2)
-r_LL_w[1], r_LL_f[1] = r_L * L_w[1], r_L * L_f[1]; r_LL[1] = r_LL_w[1] + r_LL_f[1]
-r_BB_i[1], r_BB_b[1] = r_B * B_i[1], r_B * B_b[1]; r_BB[1] = r_BB_i[1] + r_BB_b[1]
-T_iw[1], T_ii[1] = τ1 * W[1], 0.0; T_i[1] = T_iw[1] + T_ii[1]
-T_a[1] = τ2 * (M_i[1] + E_i[1] + B_i[1])
-T_v[1] = τ3 * (C[1] + G[1] + I[1])
-T_c[1] = τ4 * (C[1] + G[1] + I[1] - W[1] - T_v[1] - r_LL_f[1] - δ * K[1])
-P[1] = C[1] + G[1] + I[1] - W[1] - T_v[1] - T_c[1] - r_LL_f[1]
-P_i[1], P_b[1] = 0.0, 0.0; P_f[1] = P[1]
+Lw[1], Lf[1] = 5.0, 5.0
+Mw[1], Mi[1], Mf[1] = 10.0, 5.0, 5.0; M[1] = Mw[1] + Mi[1] + Mf[1]
+Ei[1], Eb[1], ei[1], eb[1] = 20.0, 10.0, 20.0, 10.0
+Bi[1], Bb[1], bi[1], bb[1] = 30.0, 20.0, 30.0, 20.0
+b[1], B[1] = bi[1] + bb[1], Bi[1] + Bb[1]
+H[1] = ν*M[1]; ΔH[1] = 0.0
+pB[1] = (1 - rB) / (1 - rB^2)
+Tiw[1], Tii[1] = τ1*W[1], 0.0; Ti[1] = Tiw[1] + Tii[1]
+Ta[1] = τ2*(Mi[1] + Ei[1] + Bi[1])
+Tv[1] = τ3*(C[1] + G[1] + I[1])
+Tc[1] = τ4*(C[1] + G[1] + I[1] - W[1] - Tv[1] - rL*Lf[1] - δ*K[1])
+P[1] = C[1] + G[1] + I[1] - W[1] - Tv[1] - Tc[1] - rL*Lf[1]
+Pi[1], Pb[1] = 0.0, 0.0; Pf[1] = P[1]
 S[1] = 0.0
-NL_w[1] = -C_w[1] + W[1] - T_iw[1] - r_LL_w[1]
-NL_i[1] = -C_i[1] - T_ii[1] - T_a[1] + r_BB_i[1] + P_i[1] + S[1]
-NL_f[1] = -I[1] + P_f[1]
-NL_b[1] = r_LL[1] + r_BB_b[1] + P_b[1] - S[1]
-NL_g[1] = -G[1] + T_i[1] + T_a[1] + T_v[1] + T_c[1] - r_BB[1]
+NLw[1] = -Cw[1] + W[1] - Tiw[1] - rL*Lw[1]
+NLi[1] = -Ci[1] - Tii[1] - Ta[1] + rB*Bi[1] + Pi[1] + S[1]
+NLf[1] = -I[1] + Pf[1]
+NLb[1] = rL*L[1] + rB*Bb[1] + Pb[1] - S[1]
+NLg[1] = -G[1] + Ti[1] + Ta[1] + Tv[1] + Tc[1] - rB*B[1]
 
 # main.mdのモデル式順序に従ったシミュレーションロープ
 for t in 2:T
-    # 税: T_iw, T_ii, T_i, T_a, T_v, T_c
-    T_iw[t] = τ1 * W[t-1]
-    T_ii[t] = τ1 * (r_BB_i[t-2] + P_i[t-1] + S[t-1])
-    T_i[t] = T_iw[t] + T_ii[t]
-    T_a[t] = τ2 * (M_i[t-1] + E_i[t-1] + B_i[t-1])
-    T_v[t] = τ3 * (C[t-1] + G[t-1] + I[t-1])
-    T_c[t] = τ4 * (C[t-1] + G[t-1] + I[t-1] - W[t-1] - T_v[t-1] - r_LL_f[t-2] - δ * K[t-1])
+    # 税: Tiw, Tii, Ti, Ta, Tv, Tc
+    Tiw[t] = τ1*W[t-1]
+    Tii[t] = τ1*(rB*Bi[t-2] + Pi[t-1] + S[t-1])
+    Ti[t] = Tiw[t] + Tii[t]
+    Ta[t] = τ2*(Mi[t-1] + Ei[t-1] + Bi[t-1])
+    Tv[t] = τ3*(C[t-1] + G[t-1] + I[t-1])
+    Tc[t] = τ4*(C[t-1] + G[t-1] + I[t-1] - W[t-1] - Tv[t-1] - rL*Lf[t-2] - δ*K[t-1])
 
     # 政府支出: G
-    G[t] = (1 + β) * G[t-1]
+    G[t] = (1 + β)*G[t-1]
 
-    # 消費: C_w, C_i, C
-    C_w[t] = α1 * (W[t-1] - T_iw[t-1] - r_LL_w[t-1]) + α2 * (M_w[t-1] - L_w[t-1])
-    C_i[t] = min(α3 * C[t-1], α4 * (M_i[t-1] + E_i[t-1] + B_i[t-1]))
-    C[t] = C_w[t] + C_i[t]
+    # 消費: Cw, Ci, C
+    Cw[t] = α1*(W[t-1] - Tiw[t-1] - rL*Lw[t-1]) + α2*(Mw[t-1] - Lw[t-1])
+    Ci[t] = min(α3*C[t-1], α4*(Mi[t-1] + Ei[t-1] + Bi[t-1]))
+    C[t] = Cw[t] + Ci[t]
 
     # 投資: I
-    I[t] = δ * K[t-1] + (u[t-1] - u_T) * γ2 * K[t-1] + γ3 * (M_f[t-1] - L_f[t-1])
+    I[t] = δ*K[t-1] + (u[t-1] - uT)*γ2*K[t-1] + γ3*(Mf[t-1] - Lf[t-1])
 
     # 設備稼働率: u
-    u[t] = (C[t] + G[t] + I[t]) / (γ1 * K[t-1])
+    u[t] = (C[t] + G[t] + I[t]) / (γ1*K[t-1])
 
     # 資本ストック: K
-    K[t] = (1 - δ) * K[t-1] + I[t]
+    K[t] = (1 - δ)*K[t-1] + I[t]
 
     # 賃金: W
-    W[t] = ω * (C[t-1] + G[t-1] + I[t-1])
+    W[t] = ω*(C[t-1] + G[t-1] + I[t-1])
 
-    # 利益: P, P_i, P_b, P_f
-    P[t] = C[t] + G[t] + I[t] - W[t] - T_v[t] - T_c[t] - r_LL_f[t-1]
-    P_i[t] = (E_i[t-1] / (E_i[t-1] + E_b[t-1])) * max(0, θ1 * (P[t] - I[t]) + θ2 * (M_f[t-1] - L_f[t-1]))
-    P_b[t] = (E_b[t-1] / (E_i[t-1] + E_b[t-1])) * max(0, θ1 * (P[t] - I[t]) + θ2 * (M_f[t-1] - L_f[t-1]))
-    P_f[t] = P[t] - P_i[t] - P_b[t]
+    # 利益: P, Pi, Pb, Pf
+    P[t] = C[t] + G[t] + I[t] - W[t] - Tv[t] - Tc[t] - rL*Lf[t-1]
+    Pi[t] = (Ei[t-1] / (Ei[t-1] + Eb[t-1]))*max(0, θ1*(P[t] - I[t]) + θ2*(Mf[t-1] - Lf[t-1]))
+    Pb[t] = (Eb[t-1] / (Ei[t-1] + Eb[t-1]))*max(0, θ1*(P[t] - I[t]) + θ2*(Mf[t-1] - Lf[t-1]))
+    Pf[t] = P[t] - Pi[t] - Pb[t]
 
     # 銀行配当: S
-    S[t] = θ3 * (r_LL[t-1] + r_BB_b[t-1] + P_b[t-1]) + θ4 * (L_f[t-1] + E_b[t-1] + B_b[t-1])
+    S[t] = θ3*(rL*L[t-1] + rB*Bb[t-1] + Pb[t-1]) + θ4*(Lf[t-1] + Eb[t-1] + Bb[t-1])
 
-    # 純貸出: NL_w, NL_i, NL_f, NL_b, NL_g
-    NL_w[t] = -C_w[t] + W[t] - T_iw[t] - r_LL_w[t-1]
-    NL_i[t] = -C_i[t] - T_ii[t] - T_a[t] + r_BB_i[t-1] + P_i[t] + S[t]
-    NL_f[t] = -I[t] + P_f[t]
-    NL_b[t] = r_LL[t-1] + r_BB_b[t-1] + P_b[t-1] - S[t]
-    NL_g[t] = -G[t] + T_i[t] + T_a[t] + T_v[t] + T_c[t] - r_BB[t-1]
+    # 純貸出: NLw, NLi, NLf, NLb, NLg
+    NLw[t] = -Cw[t] + W[t] - Tiw[t] - rL*Lw[t-1]
+    NLi[t] = -Ci[t] - Tii[t] - Ta[t] + rB*Bi[t-1] + Pi[t] + S[t]
+    NLf[t] = -I[t] + Pf[t]
+    NLb[t] = rL*L[t-1] + rB*Bb[t-1] + Pb[t-1] - S[t]
+    NLg[t] = -G[t] + Ti[t] + Ta[t] + Tv[t] + Tc[t] - rB*B[t-1]
 
-    # 債券価格: p_B
-    p_B[t] = (1 - r_B) / (1 - r_B^2)
+    # 債券価格: pB
+    pB[t] = (1 - rB) / (1 - rB^2)
 
-    # 労働者の借入と預金: L_w, ΔL_w, ΔM_w, M_w
-    L_w[t] = min(0, (ι1 - ι2 * r_L) * W[t])
-    ΔL_w[t] = L_w[t] - L_w[t-1]
-    ΔM_w[t] = NL_w[t] + ΔL_w[t]
-    M_w[t] = M_w[t-1] + ΔM_w[t]
+    # 労働者の借入と預金: Lw, ΔLw, ΔMw, Mw
+    Lw[t] = min(0, (ι1 - ι2*rL)*W[t])
+    ΔLw[t] = Lw[t] - Lw[t-1]
+    ΔMw[t] = NLw[t] + ΔLw[t]
+    Mw[t] = Mw[t-1] + ΔMw[t]
 
-    # 資本家の預金: M_i, ΔM_i
-    M_i[t] = (1 / μ1) * C_i[t]
-    ΔM_i[t] = M_i[t] - M_i[t-1]
+    # 資本家の預金: Mi, ΔMi
+    Mi[t] = (1 / μ1)*Ci[t]
+    ΔMi[t] = Mi[t] - Mi[t-1]
 
-    # 企業の借入と預金: ΔL_f, L_f, ΔM_f, M_f
-    ΔL_f[t] = max(-L_f[t-1], μ2 * (W[t] + T_v[t] + T_c[t] + r_LL_f[t-1] - μ3 * M_f[t-1]))
-    L_f[t] = L_f[t-1] + ΔL_f[t]
-    ΔM_f[t] = NL_f[t] + ΔL_f[t]
-    M_f[t] = M_f[t-1] + ΔM_f[t]
+    # 企業の借入と預金: ΔLf, Lf, ΔMf, Mf
+    ΔLf[t] = max(-Lf[t-1], μ2*(W[t] + Tv[t] + Tc[t] + rL*Lf[t-1] - μ3*Mf[t-1]))
+    Lf[t] = Lf[t-1] + ΔLf[t]
+    ΔMf[t] = NLf[t] + ΔLf[t]
+    Mf[t] = Mf[t-1] + ΔMf[t]
 
     # 総貨幣: M
-    M[t] = M_w[t] + M_i[t] + M_f[t]
+    M[t] = Mw[t] + Mi[t] + Mf[t]
 
     # 現金: H, ΔH
-    H[t] = ν * M[t]
+    H[t] = ν*M[t]
     ΔH[t] = H[t] - H[t-1]
 
     # 政府債券: Δb, b, B
-    Δb[t] = (-NL_g[t] - ΔH[t]) / p_B[t]
+    Δb[t] = (-NLg[t] - ΔH[t]) / pB[t]
     b[t] = b[t-1] + Δb[t]
-    B[t] = p_B[t] * b[t]
+    B[t] = pB[t]*b[t]
 
-    # 債券配分: B_i_e, B_b_e, B_i, B_b, b_i, b_b, Δb_i, Δb_b
-    B_i_e[t] = ((1 - λ01 - λ12 * r_E + λ22 * r_B - λ14 * π) / (λ01 + λ11 * r_E + λ12 * r_B + λ14 * π)) * E_i[t-1]
-    B_b_e[t] = ((1 - λ01 - λ12 * r_E + λ22 * r_B - λ14 * π) / (λ01 + λ11 * r_E + λ12 * r_B + λ14 * π)) * E_b[t-1]
-    B_i[t] = (B_i_e[t] / (B_i_e[t] + B_b_e[t])) * B[t]
-    B_b[t] = (B_b_e[t] / (B_i_e[t] + B_b_e[t])) * B[t]
-    b_i[t] = B_i[t] / p_B[t]
-    b_b[t] = B_b[t] / p_B[t]
-    Δb_i[t] = b_i[t] - b_i[t-1]
-    Δb_b[t] = b_b[t] - b_b[t-1]
+    # 債券配分: Bie, Bbe, Bi, Bb, bi, bb, Δbi, Δbb
+    Bie[t] = ((1 - λ01 - λ12*rE + λ22*rB - λ14*π) / (λ01 + λ11*rE + λ12*rB + λ14*π))*Ei[t-1]
+    Bbe[t] = ((1 - λ01 - λ12*rE + λ22*rB - λ14*π) / (λ01 + λ11*rE + λ12*rB + λ14*π))*Eb[t-1]
+    Bi[t] = (Bie[t] / (Bie[t] + Bbe[t]))*B[t]
+    Bb[t] = (Bbe[t] / (Bie[t] + Bbe[t]))*B[t]
+    bi[t] = Bi[t] / pB[t]
+    bb[t] = Bb[t] / pB[t]
+    Δbi[t] = bi[t] - bi[t-1]
+    Δbb[t] = bb[t] - bb[t-1]
 
-    # 株式需要と配分: E_i_T, E_b_T, p_E, Δe_i, Δe_b, e_i, e_b, E_i, E_b
-    E_i_T[t] = ((λ01 + λ11 * r_E + λ12 * r_B + λ14 * π) / (1 - λ01 - λ12 * r_E + λ22 * r_B - λ14 * π)) * B_i[t]
-    E_b_T[t] = ((λ01 + λ11 * r_E + λ12 * r_B + λ14 * π) / (1 - λ01 - λ12 * r_E + λ22 * r_B - λ14 * π)) * B_b[t]
-    p_E[t] = (E_i_T[t] + E_b_T[t]) / (e_i[t-1] + e_b[t-1])
-    Δe_i[t] = (NL_i[t] - ΔM_i[t] - p_B[t] * Δb_i[t]) / p_E[t]
-    Δe_b[t] = -Δe_i[t]
-    e_i[t] = e_i[t-1] + Δe_i[t]
-    e_b[t] = e_b[t-1] + Δe_b[t]
-    E_i[t] = p_E[t] * e_i[t]
-    E_b[t] = p_E[t] * e_b[t]
+    # 株式需要と配分: EiT, EbT, pE, Δei, Δeb, ei, eb, Ei, Eb
+    EiT[t] = ((λ01 + λ11*rE + λ12*rB + λ14*π) / (1 - λ01 - λ12*rE + λ22*rB - λ14*π))*Bi[t]
+    EbT[t] = ((λ01 + λ11*rE + λ12*rB + λ14*π) / (1 - λ01 - λ12*rE + λ22*rB - λ14*π))*Bb[t]
+    pE[t] = (EiT[t] + EbT[t]) / (ei[t-1] + eb[t-1])
+    Δei[t] = (NLi[t] - ΔMi[t] - pB[t]*Δbi[t]) / pE[t]
+    Δeb[t] = -Δei[t]
+    ei[t] = ei[t-1] + Δei[t]
+    eb[t] = eb[t-1] + Δeb[t]
+    Ei[t] = pE[t]*ei[t]
+    Eb[t] = pE[t]*eb[t]
 
-    # 次期間の利息支払いの更新: r_LL_w, r_LL_f, r_LL, r_BB_i, r_BB_b, r_BB
-    r_LL_w[t] = r_L * L_w[t]
-    r_LL_f[t] = r_L * L_f[t]
-    r_LL[t] = r_LL_w[t] + r_LL_f[t]
-    r_BB_i[t] = r_B * B_i[t]
-    r_BB_b[t] = r_B * B_b[t]
-    r_BB[t] = r_BB_i[t] + r_BB_b[t]
 end
 
 # 主要変数のプロット
