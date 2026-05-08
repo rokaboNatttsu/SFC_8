@@ -17,7 +17,7 @@ using Plots
 rB, rL, rE, π, uT = 0.03, 0.05, 0.06, 0.02, 0.8  # 金利とインフレ
 
 # シミュレーションパラメータ
-T = 100  # 期間数
+T = 500  # 期間数
 
 # カテゴリごとにグループ化された配列の初期化
 Tiw, Tii, Ti, Ta, Tv, Tc = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
@@ -200,8 +200,11 @@ plot(1:T, NWw.+NWi.+NWf.+NWb.+NWg.-K, label="stock consistency", xlabel="Time", 
 savefig("figs/stock_consistency.png")
 
 # 主要変数のプロット
-plot(1:T, C, label="Consumption", xlabel="Time", ylabel="Value", legend=:topright, yscale=:log10)
+plot(1:T, C, label="Consumption", xlabel="Time", ylabel="Value", yscale=:log10, legend=:outerright)
 plot!(1:T, G, label="Government Spending", yscale=:log10)
 plot!(1:T, I, label="Investment", yscale=:log10)
 plot!(1:T, K, label="Capital Stock", yscale=:log10)
+plot!(1:T, Ei, label="households stock", yscale=:log10)
+plot!(1:T, Eb, label="financial sector stock", yscale=:log10)
+plot!(1:T, Bi, label="households Government Bond", yscale=:log10)
 savefig("figs/sfc_model_plot.png")
