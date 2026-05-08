@@ -13,11 +13,11 @@ using Plots
 ι1, ι2 = 0.5, 0.1  # 労働者借入パラメータ
 μ1, μ2, μ3 = 20.0, 0.1, 0.1  # 企業借入パラメータ
 ν = 0.1  # 現金比率
-λ01, λ11, λ12, λ22, λ14 = 0.1, 0.5, 0.3, 0.2, 0.1  # ポートフォリオパラメータ
+λ01, λ11, λ12, λ22, λ14 = 0.5, 0.5, 0.3, 0.2, 0.1  # ポートフォリオパラメータ
 rB, rL, rE, π, uT = 0.03, 0.05, 0.06, 0.02, 0.8  # 金利とインフレ
 
 # シミュレーションパラメータ
-T = 14  # 期間数
+T = 100  # 期間数
 
 # カテゴリごとにグループ化された配列の初期化
 Tiw, Tii, Ti, Ta, Tv, Tc = zeros(T), zeros(T), zeros(T), zeros(T), zeros(T), zeros(T)
@@ -128,9 +128,6 @@ function simulate(st, en)
         NLb[t] = rL*L[t-1] + rB*Bb[t-1] + Pb[t] - S[t]
         NLg[t] = -G[t] + Ti[t] + Ta[t] + Tv[t] + Tc[t] - rB*B[t-1]
 
-        println(NLw[t], ", ", NLi[t], ", ", NLf[t], ", ", NLb[t], ", ", NLg[t])
-        println(sum([NLw[t], NLi[t], NLf[t], NLb[t], NLg[t]]))
-
         # 債券価格: pB
         pB[t] = (1 - rB) / (1 - rB^2)
 
@@ -177,7 +174,7 @@ function simulate(st, en)
         EiT[t] = ((λ01 + λ11*rE + λ12*rB + λ14*π) / (1 - λ01 - λ12*rE + λ22*rB - λ14*π))*Bi[t]
         EbT[t] = ((λ01 + λ11*rE + λ12*rB + λ14*π) / (1 - λ01 - λ12*rE + λ22*rB - λ14*π))*Bb[t]
         pE[t] = (EiT[t] + EbT[t]) / (ei[t-1] + eb[t-1])
-        Δei[t] = (NLi[t] - ΔMi[t] - pB[t]*Δbi[t]) / pE[t]
+        Δei[t] = (NLi[t] - ΔMi[t] - pB[t]*Δbi[t]) / pE[t] # 個々の値がとりうる範囲を制限すべき？
         Δeb[t] = -Δei[t]
         ei[t] = ei[t-1] + Δei[t]
         eb[t] = eb[t-1] + Δeb[t]
@@ -203,8 +200,8 @@ plot(1:T, NWw.+NWi.+NWf.+NWb.+NWg.-K, label="stock consistency", xlabel="Time", 
 savefig("figs/stock_consistency.png")
 
 # 主要変数のプロット
-plot(1:T, C, label="Consumption", xlabel="Time", ylabel="Value", legend=:topright)
-plot!(1:T, G, label="Government Spending")
-plot!(1:T, I, label="Investment")
-plot!(1:T, K, label="Capital Stock")
+plot(1:T, C, label="Consumption", xlabel="Time", ylabel="Value", legend=:topright, yscale=:log10)
+plot!(1:T, G, label="Government Spending", yscale=:log10)
+plot!(1:T, I, label="Investment", yscale=:log10)
+plot!(1:T, K, label="Capital Stock", yscale=:log10)
 savefig("figs/sfc_model_plot.png")
